@@ -22,3 +22,10 @@ This is a Flask-based web application that analyzes password strength and genera
 ```bash
 pip install -r requirements.txt
 python app.py
+## 🌐 Live Demo (Local)
+
+After running the Flask app, open your browser and go to:
+
+http://127.0.0.1:5000/
+
+> Note: This works only on your local machine.
