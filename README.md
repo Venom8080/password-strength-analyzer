@@ -23,6 +23,8 @@ This is a Flask-based web application that analyzes password strength and genera
 pip install -r requirements.txt
 python app.py
 ## 🌐 Live Demo (Local)
+<img width="864" height="946" alt="image" src="https://github.com/user-attachments/assets/e1502db7-d300-4d6f-ba51-7ab576c22e60" />
+
 
 After running the Flask app, open your browser and go to:
 
