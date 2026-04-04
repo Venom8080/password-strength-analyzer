@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — SecurePass</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+</head>
+<body>
+    <div class="wrap">
+        <div class="card">
+            <header class="brand">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="" class="brand-logo" width="80" height="80"
+                     data-fallback="{{ url_for('static', filename='logo.svg') }}" id="loginLogo">
+                <h1>Log in</h1>
+            </header>
+            {% if error %}
+            <p style="color:var(--weak);margin-bottom:12px;">{{ error }}</p>
+            {% endif %}
+            <form method="post" action="{{ url_for('login') }}">
+                <p class="section-label">User number</p>
+                <div class="input-group">
+                    <input type="text" name="user_number" required placeholder="Your user number" autocomplete="username">
+                </div>
+                <p class="section-label">Password</p>
+                <div class="input-group">
+                    <input type="password" name="password" required placeholder="Login password" autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn-generate" style="width:100%;">Log in</button>
+            </form>
+            <p style="margin-top:16px;text-align:center;font-size:0.88rem;"><a href="{{ url_for('register') }}" style="color:var(--accent);">Create an account</a></p>
+        </div>
+    </div>
+    <script>
+        const el = document.getElementById('loginLogo');
+        if (el && el.dataset.fallback) {
+            el.addEventListener('error', function() { this.src = this.dataset.fallback; }, { once: true });
+        }
+    </script>
+</body>
+</html>

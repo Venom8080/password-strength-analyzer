@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choose — SecurePass</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+</head>
+<body>
+    <div class="wrap">
+        <div class="card">
+            <div class="topbar">
+                <span class="user-id">Hello, <strong>{{ name or user_number }}</strong></span>
+                <a href="{{ url_for('logout') }}">Log out</a>
+            </div>
+
+            <header class="brand">
+                <img
+                    src="{{ url_for('static', filename='logo.png') }}"
+                    alt="SecurePass"
+                    class="brand-logo shimmer"
+                    id="brandLogo"
+                    width="96"
+                    height="96"
+                    data-fallback="{{ url_for('static', filename='logo.svg') }}"
+                >
+                <h1>SecurePass</h1>
+                <p class="tagline">What would you like to do?</p>
+            </header>
+
+            <div class="choice-actions">
+                <a href="{{ url_for('strong') }}" class="choice-strong">🔐 Strong password</a>
+                <a href="{{ url_for('recover') }}" class="choice-recover">🔓 Recover password</a>
+            </div>
+        </div>
+    </div>
+    <script>
+        const el = document.getElementById('brandLogo');
+        if (el && el.dataset.fallback) {
+            el.addEventListener('error', function() {
+                this.src = this.dataset.fallback;
+                this.removeAttribute('data-fallback');
+            }, { once: true });
+        }
+    </script>
+</body>
+</html>

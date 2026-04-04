@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recover password — SecurePass</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+</head>
+<body>
+    <div class="wrap">
+        <div class="card">
+            <div class="topbar">
+                <a href="{{ url_for('choice') }}" class="back-link">← Back</a>
+                <span class="user-id"><strong>{{ user_number }}</strong></span>
+                <a href="{{ url_for('logout') }}">Log out</a>
+            </div>
+
+            <header class="brand">
+                <img
+                    src="{{ url_for('static', filename='logo.png') }}"
+                    alt="SecurePass"
+                    class="brand-logo shimmer"
+                    id="brandLogo"
+                    width="96"
+                    height="96"
+                    data-fallback="{{ url_for('static', filename='logo.svg') }}"
+                >
+                <h1>Recover password</h1>
+                <p class="tagline">Retrieve your saved strong suggestion</p>
+            </header>
+
+            <div class="decrypt-panel" id="decryptSection" style="margin-top:0;border:none;padding:0;background:transparent;">
+                <h3 style="font-size:1rem;margin-bottom:8px;">Enter original password</h3>
+                <p class="hint">Must match what you used when you clicked &quot;Copy suggested password&quot; to save.</p>
+                <div class="input-group" style="margin-bottom:10px;">
+                    <input type="password" id="recoverInput" placeholder="Original password" autocomplete="off">
+                </div>
+                <div class="btn-group" style="margin-bottom:12px;">
+                    <button type="button" class="btn-secondary" id="decryptBtn">Retrieve</button>
+                </div>
+                <p class="section-label" style="margin-top:8px;">Result</p>
+                <div class="decrypt-output" id="decryptOutput"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const recoverInput = document.getElementById('recoverInput');
+        const decryptBtn = document.getElementById('decryptBtn');
+        const decryptOutput = document.getElementById('decryptOutput');
+
+        const brandLogo = document.getElementById('brandLogo');
+        if (brandLogo && brandLogo.dataset.fallback) {
+            brandLogo.addEventListener('error', function() {
+                this.src = this.dataset.fallback;
+                this.removeAttribute('data-fallback');
+            }, { once: true });
+        }
+
+        decryptBtn.addEventListener('click', async () => {
+            decryptOutput.textContent = '';
+            try {
+                const r = await fetch('/api/decrypt', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ original_password: recoverInput.value }),
+                    credentials: 'same-origin'
+                });
+                const data = await r.json();
+                if (!r.ok) {
+                    decryptOutput.textContent = data.error || 'Not found.';
+                    return;
+                }
+                decryptOutput.textContent = data.suggested_password;
+            } catch (e) {
+                console.error(e);
+                decryptOutput.textContent = 'Request failed.';
+            }
+        });
+    </script>
+</body>
+</html>

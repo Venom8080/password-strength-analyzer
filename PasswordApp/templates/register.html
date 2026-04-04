@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register — SecurePass</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+</head>
+<body>
+    <div class="wrap">
+        <div class="card">
+            <header class="brand">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="" class="brand-logo" width="80" height="80"
+                     data-fallback="{{ url_for('static', filename='logo.svg') }}" id="regLogo">
+                <h1>Create account</h1>
+            </header>
+            {% if success %}
+            <p style="color:var(--strong);margin-bottom:12px;">Account created. Save these credentials — they will not be shown again.</p>
+            <div class="suggest-output" style="margin-bottom:12px;">
+                <strong>Name:</strong> {{ name }}<br>
+                <strong>User number:</strong> {{ user_number }}<br>
+                <strong>Login password:</strong> {{ password }}
+            </div>
+            <a href="{{ url_for('login') }}" class="btn-generate" style="text-decoration:none;display:block;text-align:center;padding:12px;">Go to login</a>
+            {% else %}
+            {% if error %}
+            <p style="color:var(--weak);margin-bottom:12px;">{{ error }}</p>
+            {% endif %}
+            <form method="post" action="{{ url_for('register') }}">
+                <p class="section-label">Display name</p>
+                <div class="input-group">
+                    <input type="text" name="name" required placeholder="Your name" value="{{ request.form.get('name', '') }}">
+                </div>
+                <button type="submit" class="btn-generate" style="width:100%;">Register</button>
+            </form>
+            <p style="margin-top:16px;text-align:center;font-size:0.88rem;"><a href="{{ url_for('login') }}" style="color:var(--accent);">Already have an account?</a></p>
+            {% endif %}
+        </div>
+    </div>
+    <script>
+        const el = document.getElementById('regLogo');
+        if (el && el.dataset.fallback) {
+            el.addEventListener('error', function() { this.src = this.dataset.fallback; }, { once: true });
+        }
+    </script>
+</body>
+</html>

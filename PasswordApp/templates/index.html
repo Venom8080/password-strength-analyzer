@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecurePass</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+</head>
+<body>
+    <div class="wrap">
+        <div class="card" style="text-align:center;">
+            <header class="brand">
+                <img
+                    src="{{ url_for('static', filename='logo.png') }}"
+                    alt="SecurePass"
+                    class="brand-logo shimmer"
+                    width="96"
+                    height="96"
+                    data-fallback="{{ url_for('static', filename='logo.svg') }}"
+                    id="landingLogo"
+                >
+                <h1>SecurePass</h1>
+                <p class="tagline">Login-based password strength, suggestions, and recovery.</p>
+            </header>
+            <p style="margin-bottom:16px;color:var(--muted);font-size:0.95rem;">Sign in or register — then pick Strong password or Recover.</p>
+            <div class="btn-group" style="justify-content:center;">
+                <a href="{{ url_for('login') }}" class="btn-generate" style="text-decoration:none;display:inline-block;text-align:center;">Log in</a>
+                <a href="{{ url_for('register') }}" class="btn-secondary" style="text-decoration:none;display:inline-block;text-align:center;">Register</a>
+            </div>
+        </div>
+    </div>
+    <script>
+        const el = document.getElementById('landingLogo');
+        if (el && el.dataset.fallback) {
+            el.addEventListener('error', function() {
+                this.src = this.dataset.fallback;
+                this.removeAttribute('data-fallback');
+            }, { once: true });
+        }
+    </script>
+</body>
+</html>

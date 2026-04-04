@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strong password — SecurePass</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+</head>
+<body>
+
+    <div class="wrap">
+        <div class="card">
+            <div class="topbar">
+                <a href="{{ url_for('choice') }}" class="back-link">← Back</a>
+                <span class="user-id"><strong>{{ user_number }}</strong></span>
+                <a href="{{ url_for('logout') }}">Log out</a>
+            </div>
+
+            <header class="brand">
+                <img
+                    src="{{ url_for('static', filename='logo.png') }}"
+                    alt="SecurePass"
+                    class="brand-logo shimmer"
+                    id="brandLogo"
+                    width="96"
+                    height="96"
+                    data-fallback="{{ url_for('static', filename='logo.svg') }}"
+                >
+                <h1>Strong password</h1>
+                <p class="tagline">Check strength · Generate strong suggestion · Save on copy</p>
+            </header>
+
+            <p class="section-label">Your password (never auto-filled)</p>
+            <div class="input-group">
+                <input type="password" id="passwordInput" placeholder="Type a password to evaluate…" autocomplete="off">
+                <button type="button" class="toggle-btn" id="toggleVisibility" aria-label="Toggle visibility">👁️</button>
+            </div>
+
+            <div class="strength-container">
+                <div class="strength-bar-bg">
+                    <div class="strength-bar-fill" id="strengthBar"></div>
+                </div>
+                <div class="score-text">
+                    <span id="statusText">Status: None</span>
+                    <span id="scoreText">Score: 0 / 10</span>
+                </div>
+                <div id="crack-time">Enter a password to estimate crack time.</div>
+            </div>
+
+            <ul class="criteria-list" id="criteriaList">
+                <li id="crit-length">❌ At least 8 characters</li>
+                <li id="crit-upper">❌ Uppercase letter (A-Z)</li>
+                <li id="crit-lower">❌ Lowercase letter (a-z)</li>
+                <li id="crit-number">❌ Number (0-9)</li>
+                <li id="crit-special">❌ Special character</li>
+                <li id="crit-no-space">❌ No spaces allowed</li>
+            </ul>
+
+            <hr>
+
+            <p class="section-label">Strong suggested password</p>
+            <p style="font-size:0.82rem;color:var(--muted);margin-bottom:12px;">Uses your main password field. Click <strong>Generate</strong> — your input is never replaced.</p>
+            <div class="btn-group">
+                <button type="button" class="btn-generate" id="generateBtn">Generate</button>
+            </div>
+
+            <div class="suggest-panel hidden" id="suggestPanel">
+                <h3>Suggested password</h3>
+                <p class="hint" id="suggestMeta"></p>
+                <div class="suggest-output" id="suggestedPassword"></div>
+                <div class="suggest-actions">
+                    <button type="button" class="btn-suggest-copy" id="suggestCopyBtn">Copy suggested password</button>
+                </div>
+            </div>
+
+            <hr>
+
+            <div class="btn-group">
+                <button type="button" class="btn-copy" id="copyBtn">Copy main field</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const passwordInput = document.getElementById('passwordInput');
+        const toggleBtn = document.getElementById('toggleVisibility');
+        const strengthBar = document.getElementById('strengthBar');
+        const statusText = document.getElementById('statusText');
+        const scoreText = document.getElementById('scoreText');
+        const crackTimeText = document.getElementById('crack-time');
+        const generateBtn = document.getElementById('generateBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const suggestPanel = document.getElementById('suggestPanel');
+        const suggestedPassword = document.getElementById('suggestedPassword');
+        const suggestMeta = document.getElementById('suggestMeta');
+        const suggestCopyBtn = document.getElementById('suggestCopyBtn');
+
+        const critLength = document.getElementById('crit-length');
+        const critUpper = document.getElementById('crit-upper');
+        const critLower = document.getElementById('crit-lower');
+        const critNumber = document.getElementById('crit-number');
+        const critSpecial = document.getElementById('crit-special');
+        const critNoSpace = document.getElementById('crit-no-space');
+
+        const PUNCTUATION = '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~';
+        function hasSpecialChar(pw) {
+            for (let i = 0; i < pw.length; i++) {
+                if (PUNCTUATION.includes(pw[i])) return true;
+            }
+            return false;
+        }
+
+        const brandLogo = document.getElementById('brandLogo');
+        if (brandLogo && brandLogo.dataset.fallback) {
+            brandLogo.addEventListener('error', function once() {
+                this.src = this.dataset.fallback;
+                this.removeAttribute('data-fallback');
+            }, { once: true });
+        }
+
+        toggleBtn.addEventListener('click', () => {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            toggleBtn.textContent = type === 'password' ? '👁️' : '🙈';
+        });
+
+        passwordInput.addEventListener('input', () => {
+            checkStrength(passwordInput.value);
+        });
+
+        function checkStrength(pw) {
+            let score = 0;
+            const hasLength = pw.length >= 8;
+            const hasUpper = /[A-Z]/.test(pw);
+            const hasLower = /[a-z]/.test(pw);
+            const hasNumber = /[0-9]/.test(pw);
+            const hasSpecial = hasSpecialChar(pw);
+            const noSpaces = !/\s/.test(pw) || pw.length === 0;
+
+            updateCriteria(critLength, hasLength);
+            updateCriteria(critUpper, hasUpper);
+            updateCriteria(critLower, hasLower);
+            updateCriteria(critNumber, hasNumber);
+            updateCriteria(critSpecial, hasSpecial);
+            updateCriteria(critNoSpace, noSpaces);
+
+            if (pw.length === 0) {
+                resetUI();
+                return;
+            }
+
+            if (hasLength) score += 1;
+            if (pw.length >= 12) score += 1;
+            if (hasUpper) score += 2;
+            if (hasLower) score += 2;
+            if (hasNumber) score += 2;
+            if (hasSpecial) score += 2;
+            if (!noSpaces) score -= 2;
+            score = Math.max(0, score);
+
+            calculateCrackTime(pw, hasUpper, hasLower, hasNumber, hasSpecial);
+            updateStrengthUI(score);
+        }
+
+        function updateCriteria(element, isValid) {
+            const label = element.textContent.replace(/^[✅❌]\s*/, '');
+            if (isValid) {
+                element.classList.add('valid');
+                element.innerHTML = '✅ ' + label;
+            } else {
+                element.classList.remove('valid');
+                element.innerHTML = '❌ ' + label;
+            }
+        }
+
+        function updateStrengthUI(score) {
+            let status, color, width;
+            if (score <= 3) {
+                status = 'Weak'; color = 'var(--weak)'; width = '33%';
+            } else if (score <= 6) {
+                status = 'Medium'; color = 'var(--medium)'; width = '66%';
+            } else {
+                status = 'Strong'; color = 'var(--strong)'; width = '100%';
+            }
+            strengthBar.style.width = width;
+            strengthBar.style.backgroundColor = color;
+            statusText.textContent = 'Status: ' + status;
+            statusText.style.color = color;
+            scoreText.textContent = 'Score: ' + score + ' / 10';
+        }
+
+        function calculateCrackTime(pw, upper, lower, num, sym) {
+            let poolSize = 0;
+            if (lower) poolSize += 26;
+            if (upper) poolSize += 26;
+            if (num) poolSize += 10;
+            if (sym) poolSize += 32;
+            if (poolSize === 0) poolSize = 26;
+            const guessesPerSec = 1e10;
+            const combinations = Math.pow(poolSize, pw.length);
+            const secondsToCrack = combinations / guessesPerSec / 2;
+            crackTimeText.textContent = 'Estimated crack time: ' + formatTime(secondsToCrack);
+        }
+
+        function formatTime(seconds) {
+            if (seconds < 1) return 'Instantly';
+            if (seconds < 60) return 'Less than a minute';
+            if (seconds < 3600) return Math.floor(seconds / 60) + ' minutes';
+            if (seconds < 86400) return Math.floor(seconds / 3600) + ' hours';
+            if (seconds < 31536000) return Math.floor(seconds / 86400) + ' days';
+            if (seconds < 31536000 * 100) return Math.floor(seconds / 31536000) + ' years';
+            if (seconds < 31536000 * 1000) return 'Centuries';
+            if (seconds < 31536000 * 1000000) return 'Thousands of years';
+            return 'Millions of years (Secure)';
+        }
+
+        function resetUI() {
+            strengthBar.style.width = '0%';
+            statusText.textContent = 'Status: None';
+            statusText.style.color = 'var(--text)';
+            scoreText.textContent = 'Score: 0 / 10';
+            crackTimeText.textContent = 'Enter a password to estimate crack time.';
+            suggestPanel.classList.add('hidden');
+            suggestedPassword.textContent = '';
+            suggestMeta.textContent = '';
+            document.querySelectorAll('.criteria-list li').forEach(item => {
+                const label = item.textContent.replace(/^[✅❌]\s*/, '');
+                item.classList.remove('valid');
+                item.innerHTML = '❌ ' + label;
+            });
+        }
+
+        async function fetchSuggestedPassword() {
+            const pw = passwordInput.value;
+            if (!pw.trim()) {
+                alert('Enter a password in the main field first.');
+                return;
+            }
+            try {
+                const r = await fetch('/api/suggest', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: pw }),
+                    credentials: 'same-origin'
+                });
+                const data = await r.json();
+                if (!r.ok) {
+                    alert(data.error || 'Request failed');
+                    return;
+                }
+                suggestedPassword.textContent = data.suggested_password;
+                suggestMeta.textContent = data.from_storage
+                    ? 'Loaded from your saved copy (same original password).'
+                    : 'New strong password (SHA-256 + salt + shuffle). Save only when you copy below.';
+                suggestPanel.classList.remove('hidden');
+            } catch (e) {
+                console.error(e);
+                alert('Could not generate suggestion.');
+            }
+        }
+
+        generateBtn.addEventListener('click', fetchSuggestedPassword);
+
+        copyBtn.addEventListener('click', () => {
+            if (passwordInput.value.length === 0) {
+                alert('Nothing to copy in the main field.');
+                return;
+            }
+            navigator.clipboard.writeText(passwordInput.value).then(() => {
+                const t = copyBtn.textContent;
+                copyBtn.textContent = 'Copied!';
+                copyBtn.classList.add('copied');
+                setTimeout(() => {
+                    copyBtn.textContent = t;
+                    copyBtn.classList.remove('copied');
+                }, 2000);
+            }).catch(() => alert('Copy failed.'));
+        });
+
+        const COPY_SUGGEST_LABEL = 'Copy suggested password';
+
+        suggestCopyBtn.addEventListener('click', async () => {
+            const sug = suggestedPassword.textContent;
+            if (!sug) return;
+            const orig = passwordInput.value;
+            try {
+                await navigator.clipboard.writeText(sug);
+            } catch (e) {
+                alert('Copy failed.');
+                return;
+            }
+            try {
+                const r = await fetch('/api/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        original_password: orig,
+                        suggested_password: sug
+                    }),
+                    credentials: 'same-origin'
+                });
+                const data = await r.json();
+                if (!r.ok) {
+                    alert(data.error || 'Save failed');
+                    return;
+                }
+                suggestCopyBtn.textContent = 'Copied & saved!';
+                setTimeout(() => { suggestCopyBtn.textContent = COPY_SUGGEST_LABEL; }, 2500);
+            } catch (e) {
+                console.error(e);
+                alert('Copied to clipboard but server save failed.');
+            }
+        });
+    </script>
+</body>
+</html>
