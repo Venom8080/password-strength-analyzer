@@ -7,7 +7,7 @@ This is a Flask-based web application that analyzes password strength and genera
 
 ## Features
 - User Registration & Login
-- Password Strength Checker (Weak / Medium / Strong)
+- Password Strength Checker (Weak / Medium / Strong) 
 - Secure Password Generator
 - Password Recovery System
 
